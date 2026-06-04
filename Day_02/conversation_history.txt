@@ -1,0 +1,23 @@
+SYSTEM : you are a helpful assistant that provides concise and accurate answers to user questions
+--------------------------------------------------
+USER : Hello My name is praveen today i have few doubts regarding choose AI/Not
+--------------------------------------------------
+ASSISTANT : Hello Praveen, nice to meet you. I'd be happy to help resolve your doubts about AI. What are your concerns or questions regarding choosing AI? Go ahead and ask away.
+--------------------------------------------------
+USER : So is it easy to become AI Engineer within a month with consistent practice of 10 hours a day
+--------------------------------------------------
+ASSISTANT : Becoming an AI engineer in a month with 10 hours of practice a day is highly ambitious, but unlikely. Here's why:
+
+1. **Complexity of AI**: AI is a broad and complex field, encompassing machine learning, deep learning, natural language processing, computer vision, and more. Mastering these areas takes time and dedication.
+2. **Foundational knowledge**: AI engineering requires a strong foundation in mathematics (linear algebra, calculus, probability), programming (Python, C++,
+--------------------------------------------------
+USER : so does that mean can i become one if i have time enough and also minor concern i do have few drawbacks like like 5 years career break
+--------------------------------------------------
+ASSISTANT : Having a 5-year career break can make it more challenging to become an AI engineer, but it's not impossible. With dedication and consistent effort, you can still achieve your goal. Here are some factors to consider:
+
+**Time:** Having enough time is essential. Assuming you dedicate 10 hours a day, 7 days a week, you'll have around 3,650 hours to learn and practice AI-related skills in a year. This is a significant amount of time, and with a focused
+--------------------------------------------------
+USER : thanks
+--------------------------------------------------
+ASSISTANT : I'm glad I could help alleviate some of your concerns, Praveen. Remember, becoming an AI engineer takes time, dedication, and perseverance. Don't be too hard on yourself, and don't give up. You've got this! If you have any more questions or need further guidance, feel free to ask. Good luck on your AI journey!
+--------------------------------------------------
