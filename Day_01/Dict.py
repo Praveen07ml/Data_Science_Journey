@@ -18,3 +18,6 @@ print(model_info)
 
 for key,value in model_info.items():
     print(f"key : {key} ,value : {value}")
+
+
+

@@ -27,7 +27,7 @@ def division(a,b):
         print(f"Something Went wrong : {e}")
 
         return f"Result is : 0"
-        
+
     
     else:
         print(f"The result is :{result}")
@@ -35,3 +35,5 @@ def division(a,b):
 
 print(division(10,5))
 print(division(10,0))   
+
+
