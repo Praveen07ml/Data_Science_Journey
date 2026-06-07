@@ -1,0 +1,21 @@
+customer_id,name,age,city,purchase,purchase_group,label
+1001,Aarav,24.0,Hyderabad,1200.0,Low Value,processed
+1002,Priya,29.0,Mumbai,3400.0,High Value,processed
+1003,Rahul,31.41176470588235,Hyderabad,2800.0,High Value,processed
+1004,Ananya,22.0,Delhi,0.0,Low Value,processed
+1005,Vikram,41.0,Bangalore,5600.0,High Value,processed
+1006,Sneha,27.0,unkown,2100.0,High Value,processed
+1007,Karan,31.0,Hyderabad,4500.0,High Value,processed
+1008,Meera,31.41176470588235,Pune,1800.0,Low Value,processed
+1009,Arjun,38.0,Mumbai,0.0,Low Value,processed
+1010,Divya,23.0,Delhi,1100.0,Low Value,processed
+1011,Rohan,45.0,Bangalore,7100.0,High Value,processed
+1012,unknown,30.0,Hyderabad,3900.0,High Value,processed
+1013,Nikhil,28.0,Chennai,2400.0,High Value,processed
+1014,Isha,33.0,unkown,5200.0,High Value,processed
+1015,Varun,31.41176470588235,Hyderabad,1600.0,Low Value,processed
+1016,Pooja,37.0,Mumbai,4800.0,High Value,processed
+1017,Aditya,42.0,Bangalore,0.0,Low Value,processed
+1018,Neha,21.0,Delhi,700.0,Low Value,processed
+1019,Sanjay,34.0,Hyderabad,3500.0,High Value,processed
+1020,Aditi,29.0,unkown,2700.0,High Value,processed

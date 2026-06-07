@@ -67,3 +67,5 @@ print()
 # filtering rows based on two conditions with AND
 
 print(df[ (df['age'] > 25) & (df['city'] == 'Hyderabad')][['name','purchase']])
+
+
