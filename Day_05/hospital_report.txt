@@ -1,0 +1,36 @@
+HOSPITAL APPOINTMENT ANALYSIS REPORT
+
+Patient No Show Analysis:
+The overall no show rate for the hospital in 2024 was 22 percent.
+Cardiology department had the highest no show rate at 28 percent.
+Orthopedics had a no show rate of 21 percent.
+Pediatrics had the lowest no show rate at 12 percent.
+Patients aged 18 to 30 had the highest no show tendency at 35 percent.
+Senior patients above 60 had the lowest no show rate at 8 percent.
+Rural patients showed 40 percent higher no show rates than urban patients.
+SMS reminders sent 24 hours before reduced no shows by 25 percent.
+Monday appointments had highest no show rate at 30 percent.
+Friday afternoon appointments had lowest no show rate at 10 percent.
+
+ER Operations Analysis:
+Average ER wait time was 48 minutes overall.
+Peak hours between 6 PM and 10 PM showed wait times of 75 minutes.
+Weekend evenings had highest patient volume with 150 cases per day.
+Staff shortage during night shifts increased wait time by 35 minutes.
+Triage level 1 patients were seen within 5 minutes on average.
+Triage level 3 patients waited an average of 52 minutes.
+
+Billing and Revenue:
+Total hospital revenue in Q4 was 2.3 crore rupees.
+32 percent of invoices remained unpaid after 30 days.
+Cardiology generated highest revenue at 45 lakh rupees per month.
+Billing disputes were highest in surgery department at 18 percent.
+Insurance claim rejection rate was 12 percent overall.
+Digital payment adoption increased by 40 percent in 2024.
+
+Department Performance:
+Neurology had average patient satisfaction score of 4.2 out of 5.
+Emergency department handled 5400 cases in Q4.
+ICU bed occupancy reached 92 percent during winter months.
+Orthopedics had longest average treatment time at 45 minutes per patient.
+Pediatrics had highest patient satisfaction at 4.7 out of 5.
