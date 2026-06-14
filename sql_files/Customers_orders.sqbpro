@@ -1,0 +1,185 @@
+<?xml version="1.0" encoding="UTF-8"?><sqlb_project><db path="Customers_orders.db" readonly="0" foreign_keys="1" case_sensitive_like="0" temp_store="0" wal_autocheckpoint="1000" synchronous="2"/><attached/><window><main_tabs open="structure browser pragmas query" current="3"/></window><tab_structure><column_width id="0" width="300"/><column_width id="1" width="0"/><column_width id="2" width="100"/><column_width id="3" width="1259"/><column_width id="4" width="0"/><expanded_item id="0" parent="1"/><expanded_item id="1" parent="1"/><expanded_item id="2" parent="1"/><expanded_item id="3" parent="1"/></tab_structure><tab_browse><table title="customers" custom_title="0" dock_id="1" table="4,9:maincustomers"/><dock_state state="000000ff00000000fd0000000100000002000005f4000002acfc0100000001fb000000160064006f0063006b00420072006f00770073006500310100000000000005f40000011d00ffffff0000026c0000000000000004000000040000000800000008fc00000000"/><default_encoding codec=""/><browse_table_settings><table schema="main" name="customers" show_row_id="0" encoding="" plot_x_axis="" unlock_view_pk="_rowid_" freeze_columns="0"><sort/><column_widths><column index="1" value="84"/><column index="2" value="106"/><column index="3" value="78"/><column index="4" value="163"/></column_widths><filter_values/><conditional_formats/><row_id_formats/><display_formats/><hidden_columns/><plot_y_axes/><global_filter/></table><table schema="main" name="orders" show_row_id="0" encoding="" plot_x_axis="" unlock_view_pk="_rowid_" freeze_columns="0"><sort/><column_widths><column index="1" value="60"/><column index="2" value="86"/><column index="3" value="85"/><column index="4" value="55"/></column_widths><filter_values/><conditional_formats/><row_id_formats/><display_formats/><hidden_columns/><plot_y_axes/><global_filter/></table></browse_table_settings></tab_browse><tab_sql><sql name="SQL 1*">--  Customer name with order amount
+
+SELECT c.customer_name,o.amount
+FROM customers c
+JOIN orders o
+on c.customer_id = o.customer_id;
+
+
+--  Customer name, city, order date, amount together
+
+SELECT c.customer_name,c.city,o.order_date,o.amount
+FROM customers c
+JOIN orders o
+on c.customer_id = o.customer_id;
+
+-- Only Hyderabad customers with their orders
+
+SELECT c.customer_name,o.order_date,o.amount
+FROM customers c
+JOIN orders o
+on c.customer_id = o.customer_id
+where c.city = &quot;Hyderabad&quot; ;
+
+
+-- Total amount spent by each customer
+
+SELECT c.customer_name,sum(o.amount) as total_amount
+FROM customers c
+JOIN orders o
+on c.customer_id = o.customer_id
+GROUP by c.customer_name
+ORDER by total_amount desc;
+
+
+--  How many orders each customer placed
+
+SELECT c.customer_name,count(o.order_id) as order_count
+FROM customers c
+JOIN orders o
+on c.customer_id = o.customer_id
+GROUP by c.customer_name
+ORDER by order_count DESC;
+
+
+-- FINDING cutomers who never placed ordes
+
+SELECT c.customer_name,c.city
+FROM customers c
+left JOIN orders o
+on c.customer_id = o.customer_id
+where o.order_id is NULL;
+
+
+-- 	using to replace null with zero
+
+SELECT c.customer_name,coalesce(sum(o.amount),0) as total_amount
+FROM customers c
+LEFT JOIN orders o
+on c.customer_id = o.customer_id
+GROUP by c.customer_name
+ORDER by total_amount desc;
+
+
+-- orders that have no matching customer.
+
+SELECT o.order_id,o.amount
+FROM orders o
+LEFT JOIN customers c
+on o.customer_id = c.customer_id
+where c.customer_id is NULL;
+
+
+--  All customers including those with no orders
+
+SELECT c.customer_name,coalesce(sum(o.amount),0) as total_amount
+FROM customers c
+LEFT JOIN orders o
+on c.customer_id = o.customer_id
+GROUP by c.customer_name;
+
+
+-- Customers who never placed an order
+
+SELECT c.customer_name,o.amount
+FROM customers c
+LEFT JOIN orders o
+on c.customer_id = o.customer_id
+WHERE o.order_id is null;
+
+
+-- Total spending per customer, show 0 for inactive
+
+
+SELECT c.customer_name,coalesce(sum(o.amount),0) as total_amount 
+FROM customers c
+LEFT JOIN orders o
+on c.customer_id = o.customer_id
+GROUP by c.customer_name
+ORDER by total_amount desc;
+
+
+-- Total spending per customer, show 0 for inactive
+
+SELECT c.customer_name,count(*) as order_count,CASE WHEN count(o.order_id) = 0 THEN &quot;Inacative&quot; ELSE &quot;Active&quot; END as Status
+FROM customers c
+LEFT join orders o
+on c.customer_id = o.customer_id
+GROUP by c.customer_name
+ORDER by order_count desc;
+
+
+--  Find orphaned orders with no matching customer
+
+SELECT o.order_id,o.amount
+FROM orders o
+LEFT JOIN customers c
+on o.customer_id = c.customer_id
+where c.customer_id is NULL;
+
+--  Which city has customers who never ordered?
+
+SELECT c.customer_name,c.city
+FROM customers c
+LEFT JOIN orders o
+on c.customer_id = o.customer_id
+WHERE o.order_id is NULL;
+
+
+
+-- Show customer name, order count, total spent. If no orders show 0 for both.
+
+SELECT c.customer_name,count(o.order_id) as order_count,coalesce(sum(o.amount),0) as total_spent
+FROM customers c
+LEFT JOIN orders o
+on c.customer_id = o.customer_id
+GROUP by c.customer_name
+order by total_spent desc;
+
+
+-- Find orders where customer does not exist in customers table
+
+SELECT o.order_id,o.amount,o.order_date
+FROM orders o
+LEFT JOIN customers c
+on o.customer_id = c.customer_id
+WHERE c.customer_id is NULL;
+
+
+-- Show only customers who placed more than 1 order with their total spending.
+
+SELECT c.customer_name,count(o.order_id) as order_count,sum(o.amount) as total_spent
+FROM customers c
+JOIN orders o
+on c.customer_id = o.customer_id
+GROUP by c.customer_name
+HAVING count(o.order_id) &gt; 1;
+
+-- -- Show only customers who placed more than 1 order with their total spending.
+
+SELECT c.customer_name,count(o.order_id) as order_count,sum(o.amount) as total_spent
+FROM customers c
+JOIN orders o
+on c.customer_id = o.customer_id
+GROUP by c.customer_name
+HAVING count(o.order_id) &gt; 1;
+
+--  Show all customers, their last order date, and label as Active or Inactive. If no orders show last order date as Never
+
+
+SELECT c.customer_name,coalesce(max(o.order_date),&quot;Never ordered&quot;) as last_order_date,CASE WHEN count(o.order_date) = 0 THEN &quot;Inactive&quot; ELSE &quot;Active&quot; END as Status 
+FROM customers c
+LEFT JOIN orders o
+on c.customer_id = o.customer_id
+GROUP by c.customer_name;
+
+
+
+
+
+-- 
+
+
+
+
+</sql><current_tab id="0"/></tab_sql></sqlb_project>
