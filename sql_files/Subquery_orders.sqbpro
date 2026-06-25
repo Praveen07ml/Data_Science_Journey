@@ -1,0 +1,267 @@
+<?xml version="1.0" encoding="UTF-8"?><sqlb_project><db path="C:/Users/prave/OneDrive/Documents/Subquery_orders.db" readonly="0" foreign_keys="1" case_sensitive_like="0" temp_store="0" wal_autocheckpoint="1000" synchronous="2"/><attached/><window><main_tabs open="structure browser pragmas query" current="3"/></window><tab_structure><column_width id="0" width="300"/><column_width id="1" width="0"/><column_width id="2" width="100"/><column_width id="3" width="1116"/><column_width id="4" width="0"/><expanded_item id="0" parent="1"/><expanded_item id="1" parent="1"/><expanded_item id="2" parent="1"/><expanded_item id="3" parent="1"/></tab_structure><tab_browse><table title="orders" custom_title="0" dock_id="1" table="4,6:mainorders"/><dock_state state="000000ff00000000fd0000000100000002000005f4000002acfc0100000001fb000000160064006f0063006b00420072006f00770073006500310100000000000005f40000012500ffffff0000026c0000000000000004000000040000000800000008fc00000000"/><default_encoding codec=""/><browse_table_settings><table schema="main" name="orders" show_row_id="0" encoding="" plot_x_axis="" unlock_view_pk="_rowid_" freeze_columns="0"><sort/><column_widths><column index="1" value="60"/><column index="2" value="106"/><column index="3" value="78"/><column index="4" value="55"/><column index="5" value="62"/><column index="6" value="85"/></column_widths><filter_values/><conditional_formats/><row_id_formats/><display_formats/><hidden_columns/><plot_y_axes/><global_filter/></table></browse_table_settings></tab_browse><tab_sql><sql name="SQL 1*">-- Find all orders where amount is above the average amount of Mumbai orders only.
+
+
+SELECT order_id,product,amount
+FROM orders
+where amount &gt; (SELECT avg(amount) 
+FROM orders
+WHERE city = &quot;Mumbai&quot;);
+
+
+
+-- Find cities where total spending is above the overall average total spending per city.
+
+SELECT *
+FROM (SELECT city,sum(amount) as total_spending
+      FROM orders
+	  GROUP by city) as c_s
+	  
+WHERE c_s.total_spending &gt; (SELECT  avg(total_spend) FROM (SELECT city,sum(amount)as total_spend FROM orders group by city));
+
+
+-- Show each order with the total number of orders in the system next to it as an extra column.
+
+SELECT product,count(product) as order_count,(SELECT count(product) FROM orders) as total_orders
+FROM orders
+GROUP by product
+order by order_count desc;
+
+
+
+-- Find the product that generated the most total revenue. Use subquery not just ORDER BY LIMIT.
+
+SELECT * 
+FROM (SELECT product,sum(amount) as total_revenue from orders group by product)
+WHERE total_revenue = (SELECT max(revenue) from (select product,sum(amount) as revenue from orders group by product));
+
+
+
+-- Find customers who spent more than the average spending of customers from their own city.
+
+
+SELECT *
+FROM ( SELECT customer_name,city,sum(amount) as customer_total
+      from orders 
+	  GROUP by customer_name,city)c
+where c.customer_total &gt; (SELECT avg(t.customer_total)
+                          from( SELECT customer_name,city,sum(amount) as customer_total
+						        FROM orders
+								group by customer_name,city) t
+						where c.city = t.city);
+						
+						
+						
+						
+						
+-- Show all orders where the amount is greater than the overall average order amount.
+
+
+SELECT order_id,product,amount
+FROM orders
+WHERE amount &gt; (SELECT avg(amount) FROM orders);	  
+
+
+-- Show each order with the overall average order amount as an extra column.
+
+SELECT product,amount,(SELECT avg(amount) FROM orders) as avg_order_amount
+FROM orders;
+
+
+-- Find the order(s) with the highest amount using a subquery, not just ORDER BY LIMIT.
+
+SELECT order_id,product,amount
+FROM orders
+WHERE amount = (SELECT max(amount) FROM orders);
+
+
+-- Show customers whose order amount is less than the maximum order amount.
+
+SELECT product,customer_name,amount
+FROM orders
+where amount &lt; (SELECT max(amount) FROM orders);
+
+
+-- Find products whose average order amount is greater than 20000.
+
+SELECT *
+FROM (SELECT product,avg(amount) as avg_amount
+      from orders 
+	  group by product)
+WHERE avg_amount &gt; 20000;
+
+
+
+-- Show each city with its total spending, then keep only cities whose total spending is above 50000.
+
+
+SELECT *
+FROM (SELECT city,sum(amount) as total_spending
+      FROM orders
+	  group by city) c
+	  
+where total_spending &gt; 50000;
+
+
+
+-- Find cities where average order amount is above the overall average order amount.
+
+
+SELECT *
+FROM (SELECT city,avg(amount) as avg_amount 
+      FROM orders
+	  GROUP by city) c
+WHERE c.avg_amount &gt; (SELECT avg(amount) 
+                      FROM orders);
+
+-- Find cities where total spending is above the overall average total spending per city.
+
+SELECT *
+FROM ( SELECT city,sum(amount)as total_spending
+       FROM orders
+	   group by city) c
+	   
+WHERE c.total_spending &gt; (SELECT avg(t.total_spend) 
+                          FROM ( SELECT city,sum(amount) as total_spend
+                                 FROM orders
+								 group by city)t);
+								 
+								 
+-- Find the product that generated the most total revenue using a subquery.
+
+SELECT *
+FROM (SELECT product,sum(amount) as total_revenue
+      FROM orders
+	  GROUP by product) t 
+	  
+where total_revenue = (SELECT MAX(d.total)
+                       FROM (SELECT product,sum(amount) as total
+					         FROM orders
+							 GROUP BY product)d);
+					
+					
+-- Find products whose total revenue is above the average revenue of all products.
+
+SELECT *
+FROM (SELECT product,sum(amount) as total_revenue
+      FROM orders
+	  GROUP by product) p
+WHERE p.total_revenue &gt; (SELECT avg(revenue)
+                         FROM (SELECT product,sum(amount) as revenue
+						       FROM orders 
+							   group by product)a);
+							   
+							   
+							   
+-- Show customers whose total spending is above the average spending of all customers.
+
+SELECT *
+FROM (SELECT customer_name,sum(amount) as total_spending
+      FROM orders
+	  GROUP by customer_name) c
+where total_spending &gt; (SELECT avg(d.spend) FROM (SELECT customer_name,sum(amount) as spend
+                                     FROM orders
+									 GROUP by customer_name) d);
+									 
+									 
+									 
+-- Show each customer with their total spending and the average customer spending as an extra column.
+
+SELECT customer_name,sum(amount) as total_spending,(SELECT avg(spend)
+                                                    from (SELECT customer_name,sum(amount) as spend
+													      FROM orders
+														  GROUP by customer_name)) as avg_customer_spend
+													 
+FROM orders
+group by customer_name;
+
+
+
+-- Find customers who spent more than the average spending of customers from their own city.
+
+
+SELECT *
+FROM (SELECT customer_name,city,sum(amount) as total_spent
+      FROM orders
+	  GROUP by customer_name,city) as c
+WHERE c.total_spent &gt; (SELECT avg(spend)
+                       FROM (SELECT customer_name,city,sum(amount) as spend
+					         FROM orders 
+							 GROUP by customer_name,city) as d
+					   where c.city = d.city);
+
+					   
+-- Find cities whose total number of orders is greater than the average number of orders per city.
+
+SELECT *
+FROM (SELECT city,count(order_id) as total_orders
+      FROM orders
+	  group by city) c
+where c.total_orders &gt; (SELECT avg(d.total_count)
+                FROM (SELECT city,count(order_id) as total_count
+				      FROM orders
+					  GROUP by city)d);
+					  
+
+					  
+-- Find customers whose latest order amount is greater than their own average order amount.
+
+
+SELECT o.customer_name,o.order_date,o.amount
+FROM orders o
+where o.order_date = (SELECT max(order_date)
+                      FROM orders
+					  where customer_name = o.customer_name) and o.amount &gt; (SELECT avg(amount) 
+					                                              FROM orders
+																  where customer_name = o.customer_name);
+																  
+
+									
+-- Find customers who placed an order greater than every order placed in their city.
+
+SELECT o.customer_name,o.city,o.amount
+FROM orders o
+where o.amount = (SELECT max(amount) 
+                  FROM orders 
+				  where city = o.city);
+				  
+-- Find the second-highest order amount using a subquery.
+
+SELECT max(amount) as second_highest
+FROM orders
+where amount &lt; (SELECT max(amount)
+                FROM orders);
+				
+-- Find products whose total revenue is equal to the maximum product revenue.
+
+SELECT *
+FROM (SELECT product,sum(amount) as total_revenue
+      FROM orders
+	  GROUP by product) p
+where p.total_revenue = (SELECT max(revenue)
+                         FROM (SELECT product,sum(amount) as revenue
+						       FROM orders
+							   group by product)m );
+							   
+							   
+							   
+-- Show orders where the amount is above the average amount for that same product.
+
+SELECT o.product,o.amount
+FROM orders o
+where o.amount &gt; (SELECT avg(amount)
+                  FROM orders
+				  where product = o.product);
+				  
+				  
+-- Find customers who have placed more orders than the average number of orders per customer in their city.
+
+SELECT *
+FROM (SELECT customer_name,city,count(order_id) as order_count
+      FROM orders
+	  GROUP by customer_name,city)c
+where c.order_count &gt; (SELECT avg(t.counts)
+                       FROM (SELECT customer_name,city,count(order_id) as counts 
+					         FROM orders 
+							 group by customer_name,city) t
+						where city = c.city);
+					</sql><current_tab id="0"/></tab_sql></sqlb_project>
