@@ -1,197 +1,393 @@
-<?xml version="1.0" encoding="UTF-8"?><sqlb_project><db path="retail_database.db" readonly="0" foreign_keys="1" case_sensitive_like="0" temp_store="0" wal_autocheckpoint="1000" synchronous="2"/><attached/><window><main_tabs open="structure browser pragmas query" current="3"/></window><tab_structure><column_width id="0" width="300"/><column_width id="1" width="0"/><column_width id="2" width="100"/><column_width id="3" width="1366"/><column_width id="4" width="0"/><expanded_item id="0" parent="1"/><expanded_item id="1" parent="1"/><expanded_item id="2" parent="1"/><expanded_item id="3" parent="1"/></tab_structure><tab_browse><table title="retail_sales" custom_title="0" dock_id="1" table="4,12:mainretail_sales"/><dock_state state="000000ff00000000fd0000000100000002000005f4000002acfc0100000001fb000000160064006f0063006b00420072006f00770073006500310100000000000005f40000012500ffffff0000026c0000000000000004000000040000000800000008fc00000000"/><default_encoding codec=""/><browse_table_settings><table schema="main" name="retail_sales" show_row_id="0" encoding="" plot_x_axis="" unlock_view_pk="_rowid_" freeze_columns="0"><sort><column index="4" mode="1"/></sort><column_widths><column index="1" value="51"/><column index="2" value="96"/><column index="3" value="61"/><column index="4" value="31"/><column index="5" value="118"/><column index="6" value="59"/><column index="7" value="70"/><column index="8" value="114"/><column index="9" value="56"/></column_widths><filter_values/><conditional_formats/><row_id_formats/><display_formats/><hidden_columns/><plot_y_axes/><global_filter/></table></browse_table_settings></tab_browse><tab_sql><sql name="SQL 1*">
-
-SELECT * FROM retail_sales;
-
-
---  Find all products whose unit price is above the average unit price.
-
-
-SELECT product_name,unit_price
-FROM retail_sales
-where unit_price &gt; (SELECT avg(unit_price)
-                    FROM retail_sales);
-					
-					
--- inner QUERY
-
-SELECT avg(unit_price)
-FROM retail_sales;
-
-
--- with CTE
-
-WITH avg_price as (
-SELECT avg(unit_price) as avg_unit_price
-FROM retail_sales)
-
-
-SELECT product_name,unit_price
-FROM retail_sales,avg_price
-where unit_price &gt; avg_unit_price
-order by unit_price desc;
-
-
-
--- Find categories where total revenue is above 10000.
-
-
-SELECT *
-FROM ( SELECT category,
-              sum(quantity*unit_price*(1-discount_percent/100))as total_revenue
-       FROM retail_sales
-	   GROUP by category) c
-WHERE c.total_revenue &gt; 10000;
-
-
-
--- now with cte
-
-with avg_price as (
-SELECT category,
-       sum(quantity*unit_price*(1-discount_percent/100)) as total_revenue 
-FROM retail_sales
-GROUP by category)
-
-
-SELECT category,total_revenue
-FROM avg_price
-WHERE total_revenue &gt; 10000;
-
-
-
---  Your manager asks — which cities are performing above average in terms of total revenue?
-
-with city_revenue as(
-SELECT city,
-       sum(quantity*unit_price*(1-discount_percent/100)) as total_revenue 
-FROM retail_sales
-GROUP by city)
-
-
-SELECT city,round(total_revenue,2) as total_revenue
-FROM city_revenue
-where total_revenue &gt; (SELECT avg(total_revenue)
-                       FROM city_revenue)
-order by total_revenue desc;
-
-
-
--- Find products that are both high revenue AND highly discounted. These are products we are selling well but possibly giving away too much margin on.
-
-WITH product_revenue as (
-
-SELECT product_name,sum(quantity*unit_price*(1-discount_percent/100)) as total_revenue
-FROM retail_sales
-GROUP by product_name),
-
-
-product_discount as (
-
-SELECT product_name,avg(discount_percent) as avg_discount
-FROM retail_sales
-GROUP by product_name
-)
-
-
-SELECT r.product_name,round(r.total_revenue,0) as total_revenue,round(d.avg_discount,1) as avg_discount
-FROM product_revenue r
-JOIN product_discount d
-on r.product_name = d.product_name
-where r.total_revenue &gt; (SELECT avg(total_revenue) FROM product_revenue) AND d.avg_discount &gt; (SELECT avg(avg_discount) FROM product_discount)
-order by r.total_revenue;
-
-
---  Find all sales where the revenue from that single transaction is above the average transaction revenue. Use a CTE to calculate average first.
-
-with product_revenue as(
-SELECT sale_id,product_name,sum(quantity*unit_price*(1-discount_percent/100)) as total_revenue
-FROM retail_sales
-GROUP by sale_date,product_name
-)
-
-
-SELECT sale_id,product_name,round(total_revenue,0) as total_revenue
-FROM product_revenue
-WHERE total_revenue &gt; (SELECT avg(total_revenue) from	product_revenue)
-ORDER by total_revenue desc;
-
-
--- Find cities where the total quantity sold is above the average quantity sold per city. Use a CTE.
-
-with city_quantity as(
-SELECT city,
-       sum(quantity) as total_quantity
-FROM retail_sales 
-GROUP by city)
-
-
-SELECT city,total_quantity
-FROM city_quantity
-where total_quantity &gt; (SELECT avg(total_quantity) 
-                        FROM city_quantity);
-						
-						
-
--- Find the channel — Online or Offline — with higher total revenue. Use a CTE to calculate revenue per channel, then select the top one.
-WITH channel_revenue as (
-SELECT channel,sum(quantity*unit_price*(1-discount_percent/100)) as total_revenue
-FROM retail_sales
-GROUP by channel)
- 
- 
-SELECT *
-FROM channel_revenue
-WHERE total_revenue	= (SELECT max(total_revenue) FROM channel_revenue);
-
-
---  Find products sold in more than one city. Use a CTE to count distinct cities per product, then filter where count is greater than one.
-
-with city_products_count as(
-SELECT city,count(product_name) as product_count
-FROM retail_sales
-GROUP by city)
-
-SELECT *
-FROM city_products_count
-where product_count &gt; 1;
-
-
-
-WITH product_citycount as (
-SELECT product_name,count(DISTINCT city) as city_count
-FROM retail_sales
-GROUP by product_name)
-
-SELECT *
-FROM product_citycount
-where city_count &gt;= 2;
-
-
-
--- Using two chained CTEs — first calculate total revenue per category per month, then find categories where January revenue was higher than February revenue
-
-
-
-with category_month_revenue as (
-
-SELECT category,date(sale_date, '%Y-%m') as month,
-sum(quantity*unit_price*(1-discount_percent/100)) as total_revenue
-FROM retail_sales
-GROUP by category,month),
-
-jan_feb_category as(
-
-SELECT category,
-sum(case WHEN month = &quot;2024-01&quot; then total_revenue else 0 end)  as jan_revenue,
-sum(CASE WHEN month = &quot;2024-02&quot;  then total_revenue ELSE 0 END) as feb_revenue
-FROM category_month_revenue
-group by category)
-
-
-SELECT *
-FROM jan_feb_category
-where jan_revenue &gt; feb_revenue;
-
-
-
+<?xml version="1.0" encoding="UTF-8"?><sqlb_project><db path="retail_database.db" readonly="0" foreign_keys="1" case_sensitive_like="0" temp_store="0" wal_autocheckpoint="1000" synchronous="2"/><attached/><window><main_tabs open="structure browser pragmas query" current="3"/></window><tab_structure><column_width id="0" width="300"/><column_width id="1" width="0"/><column_width id="2" width="100"/><column_width id="3" width="1366"/><column_width id="4" width="0"/><expanded_item id="0" parent="1"/><expanded_item id="1" parent="1"/><expanded_item id="2" parent="1"/><expanded_item id="3" parent="1"/></tab_structure><tab_browse><table title="retail_sales" custom_title="0" dock_id="1" table="4,12:mainretail_sales"/><dock_state state="000000ff00000000fd0000000100000002000005f4000002acfc0100000001fb000000160064006f0063006b00420072006f00770073006500310100000000000005f40000012500ffffff0000026c0000000000000004000000040000000800000008fc00000000"/><default_encoding codec=""/><browse_table_settings><table schema="main" name="retail_sales" show_row_id="0" encoding="" plot_x_axis="" unlock_view_pk="_rowid_" freeze_columns="0"><sort><column index="4" mode="1"/></sort><column_widths><column index="1" value="51"/><column index="2" value="96"/><column index="3" value="61"/><column index="4" value="31"/><column index="5" value="118"/><column index="6" value="59"/><column index="7" value="70"/><column index="8" value="114"/><column index="9" value="56"/></column_widths><filter_values/><conditional_formats/><row_id_formats/><display_formats/><hidden_columns/><plot_y_axes/><global_filter/></table></browse_table_settings></tab_browse><tab_sql><sql name="SQL 1*">
+
+
+
+SELECT * FROM retail_sales;
+
+
+
+
+
+--  Find all products whose unit price is above the average unit price.
+
+
+
+
+
+SELECT product_name,unit_price
+
+FROM retail_sales
+
+where unit_price &gt; (SELECT avg(unit_price)
+
+                    FROM retail_sales);
+
+					
+
+					
+
+-- inner QUERY
+
+
+
+SELECT avg(unit_price)
+
+FROM retail_sales;
+
+
+
+
+
+-- with CTE
+
+
+
+WITH avg_price as (
+
+SELECT avg(unit_price) as avg_unit_price
+
+FROM retail_sales)
+
+
+
+
+
+SELECT product_name,unit_price
+
+FROM retail_sales,avg_price
+
+where unit_price &gt; avg_unit_price
+
+order by unit_price desc;
+
+
+
+
+
+
+
+-- Find categories where total revenue is above 10000.
+
+
+
+
+
+SELECT *
+
+FROM ( SELECT category,
+
+              sum(quantity*unit_price*(1-discount_percent/100))as total_revenue
+
+       FROM retail_sales
+
+	   GROUP by category) c
+
+WHERE c.total_revenue &gt; 10000;
+
+
+
+
+
+
+
+-- now with cte
+
+
+
+with avg_price as (
+
+SELECT category,
+
+       sum(quantity*unit_price*(1-discount_percent/100)) as total_revenue 
+
+FROM retail_sales
+
+GROUP by category)
+
+
+
+
+
+SELECT category,total_revenue
+
+FROM avg_price
+
+WHERE total_revenue &gt; 10000;
+
+
+
+
+
+
+
+--  Your manager asks  which cities are performing above average in terms of total revenue?
+
+
+
+with city_revenue as(
+
+SELECT city,
+
+       sum(quantity*unit_price*(1-discount_percent/100)) as total_revenue 
+
+FROM retail_sales
+
+GROUP by city)
+
+
+
+
+
+SELECT city,round(total_revenue,2) as total_revenue
+
+FROM city_revenue
+
+where total_revenue &gt; (SELECT avg(total_revenue)
+
+                       FROM city_revenue)
+
+order by total_revenue desc;
+
+
+
+
+
+
+
+-- Find products that are both high revenue AND highly discounted. These are products we are selling well but possibly giving away too much margin on.
+
+
+
+WITH product_revenue as (
+
+
+
+SELECT product_name,sum(quantity*unit_price*(1-discount_percent/100)) as total_revenue
+
+FROM retail_sales
+
+GROUP by product_name),
+
+
+
+
+
+product_discount as (
+
+
+
+SELECT product_name,avg(discount_percent) as avg_discount
+
+FROM retail_sales
+
+GROUP by product_name
+
+)
+
+
+
+
+
+SELECT r.product_name,round(r.total_revenue,0) as total_revenue,round(d.avg_discount,1) as avg_discount
+
+FROM product_revenue r
+
+JOIN product_discount d
+
+on r.product_name = d.product_name
+
+where r.total_revenue &gt; (SELECT avg(total_revenue) FROM product_revenue) AND d.avg_discount &gt; (SELECT avg(avg_discount) FROM product_discount)
+
+order by r.total_revenue;
+
+
+
+
+
+--  Find all sales where the revenue from that single transaction is above the average transaction revenue. Use a CTE to calculate average first.
+
+
+
+with product_revenue as(
+
+SELECT sale_id,product_name,sum(quantity*unit_price*(1-discount_percent/100)) as total_revenue
+
+FROM retail_sales
+
+GROUP by sale_date,product_name
+
+)
+
+
+
+
+
+SELECT sale_id,product_name,round(total_revenue,0) as total_revenue
+
+FROM product_revenue
+
+WHERE total_revenue &gt; (SELECT avg(total_revenue) from	product_revenue)
+
+ORDER by total_revenue desc;
+
+
+
+
+
+-- Find cities where the total quantity sold is above the average quantity sold per city. Use a CTE.
+
+
+
+with city_quantity as(
+
+SELECT city,
+
+       sum(quantity) as total_quantity
+
+FROM retail_sales 
+
+GROUP by city)
+
+
+
+
+
+SELECT city,total_quantity
+
+FROM city_quantity
+
+where total_quantity &gt; (SELECT avg(total_quantity) 
+
+                        FROM city_quantity);
+
+						
+
+						
+
+
+
+-- Find the channel  Online or Offline  with higher total revenue. Use a CTE to calculate revenue per channel, then select the top one.
+
+WITH channel_revenue as (
+
+SELECT channel,sum(quantity*unit_price*(1-discount_percent/100)) as total_revenue
+
+FROM retail_sales
+
+GROUP by channel)
+
+ 
+
+ 
+
+SELECT *
+
+FROM channel_revenue
+
+WHERE total_revenue	= (SELECT max(total_revenue) FROM channel_revenue);
+
+
+
+
+
+--  Find products sold in more than one city. Use a CTE to count distinct cities per product, then filter where count is greater than one.
+
+
+
+with city_products_count as(
+
+SELECT city,count(product_name) as product_count
+
+FROM retail_sales
+
+GROUP by city)
+
+
+
+SELECT *
+
+FROM city_products_count
+
+where product_count &gt; 1;
+
+
+
+
+
+
+
+WITH product_citycount as (
+
+SELECT product_name,count(DISTINCT city) as city_count
+
+FROM retail_sales
+
+GROUP by product_name)
+
+
+
+SELECT *
+
+FROM product_citycount
+
+where city_count &gt;= 2;
+
+
+
+
+
+
+
+-- Using two chained CTEs first calculate total revenue per category per month, then find categories where January revenue was higher than February revenue
+
+
+
+
+
+
+
+with category_month_revenue as (
+
+
+
+SELECT category,date(sale_date, '%Y-%m') as month,
+
+sum(quantity*unit_price*(1-discount_percent/100)) as total_revenue
+
+FROM retail_sales
+
+GROUP by category,month),
+
+
+
+jan_feb_category as(
+
+
+
+SELECT category,
+
+sum(case WHEN month = &quot;2024-1&quot; then total_revenue else 0 end)  as jan_revenue,
+
+sum(CASE WHEN month = &quot;2024-2&quot;  then total_revenue ELSE 0 END) as feb_revenue
+
+FROM category_month_revenue
+
+group by category)
+
+
+
+
+
+SELECT *
+
+FROM jan_feb_category
+
+where jan_revenue &gt; feb_revenue;
+
+
+
+
+
+
+
 </sql><current_tab id="0"/></tab_sql></sqlb_project>
